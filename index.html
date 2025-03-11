@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Vue 3 - Filter Users by Age</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.fluid.classless.min.css"
+    />
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  </head>
+
+  <body>
+    <main id="app">
+      <div>
+        <h1>Vue 3 - Tri des utilisateurs par âge</h1>
+        <hr />
+        <button @click="fetchUsers">Charger les utilisateurs</button>
+
+        <label for="sort-age">Trier par âge :</label>
+        <select id="sort-age" v-model="sortOrder">
+          <option value="none">Aucun tri</option>
+          <option value="older-first">Plus âgé d'abord</option>
+          <option value="younger-first">Plus jeune d'abord</option>
+        </select>
+      </div>
+
+      <table v-if="sortedUsers.length">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Nom</th>
+            <th>Âge</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in sortedUsers" :key="user.email">
+            <td>
+              <img :src="user.picture.thumbnail" :alt="user.name.first" />
+            </td>
+            <td>{{ user.name.first }} {{ user.name.last }}</td>
+            <td>{{ user.dob.age }} ans</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p v-else>Aucun utilisateur trouvé.</p>
+    </main>
+
+    <script type="module">
+      import {
+        createApp,
+        ref,
+        computed,
+      } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+
+      createApp({
+        setup() {
+          const users = ref([]);
+          const sortOrder = ref("none");
+          const fetchUsers = async () => {
+            try {
+              const response = await fetch(
+                "https://randomuser.me/api/?results=5"
+              );
+              const data = await response.json();
+              users.value = data.results;
+            } catch (error) {
+              console.error(
+                "Erreur lors de la récupération des utilisateurs :",
+                error
+              );
+            }
+          };
+
+          const sortedUsers = computed(() => {
+            if (sortOrder.value === "none") {
+              return users.value;
+            } else if (sortOrder.value === "older-first") {
+              return [...users.value].sort((a, b) => b.dob.age - a.dob.age);
+            } else if (sortOrder.value === "younger-first") {
+              return [...users.value].sort((a, b) => a.dob.age - b.dob.age);
+            }
+          });
+
+          return {
+            users,
+            sortOrder,
+            fetchUsers,
+            sortedUsers,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
